@@ -1,140 +1,178 @@
+// Imports Flutter's Material Design widgets.
+// Scaffold, AppBar, TextField, buttons, etc.
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+	
+	// runApp() tells Flutter which widget should be the root
+  	// (starting point)
+  	runApp(const MyApp());
 }
 
+// MyApp is the main/root widget of our application.
+// StatelessWidget = this widget doesn't
+// change while the app is running.
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+	
+	// Constructor for MyApp.
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'LLM App',
-      theme: ThemeData(
-        useMaterial3: true,
-      ),
-      home: const ChatPage(),
+  	// "super.key" passes the widget's key to the parent class.
+  	const MyApp({super.key});
+
+	// builds UI 
+ 	@override
+  	Widget build(BuildContext context) {
+
+		// main wrapper, provides things like nav, fonts, deign, themes etc etc...
+    	return MaterialApp(
+
+			// Removes the "DEBUG" banner from corner
+      		debugShowCheckedModeBanner: false,
+      		title: 'LLM App',
+
+			// control app appearance
+      		theme: ThemeData(
+        		useMaterial3: true,
+      		),
+			// home page - created below...
+      		home: const ChatPage(),
     );
   }
 }
+
+// this is a stateful widget -- chat will change as the user sends messages!
+// [] --> ["hello world"]
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({super.key});
+	// constructor for chatpage
+  	const ChatPage({super.key});
 
-  @override
-  State<ChatPage> createState() => _ChatPageState();
+	// creates obj that stores changing state of screen
+  	@override
+  	State<ChatPage> createState() => _ChatPageState();
 }
 
+// private class; everything that can change wihtin ChatPage 
 class _ChatPageState extends State<ChatPage> {
-  final TextEditingController messageController = TextEditingController();
 
-  final List<Map<String, String>> messages = [];
+	// cont5rol + read what is in textbox
+  	final TextEditingController messageController = TextEditingController();
 
-  void sendMessage() {
-    final text = messageController.text.trim();
+	// stores all chat messages w/ a map of sender and message
+ 	final List<Map<String, String>> messages = [];
 
-    if (text.isEmpty) return;
+	// user presses button -> this function
+  	void sendMessage() {
 
-    setState(() {
-      messages.add({
-        'sender': 'user',
-        'message': text,
-      });
+		// get text currently inside textbox 
+    	final text = messageController.text.trim();
 
-      messages.add({
-        'sender': 'ai',
-        'message': 'This is where our local LLM will respond 🤖',
-      });
-    });
+    	if (text.isEmpty) return;
 
-    messageController.clear();
-  }
+		// tells flutter something has changed -- rebuild UI
+		setState(() {
+			messages.add({
+				'sender': 'user',
+				'message': text,
+			});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('LLM App 🤖'),
-      ),
+			messages.add({
+				'sender': 'ai',
+				'message': 'This is where our local LLM will respond...',
+			});
+		});
 
-      body: Column(
-        children: [
+		// empty after send
+    	messageController.clear();
+  	}
+	
+	// builds the visual interface for ChatPage
+  	@override
+  	Widget build(BuildContext context) {
+		// basic Flutter screen structure
+    	return Scaffold(
+      		appBar: AppBar(
+        	title: const Text('LLM App - Flutter Tutorial'),
+      	),
 
-          // Messages
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
+      	body: Column(
+        	children: [
 
-                final message = messages[index];
-                final isUser = message['sender'] == 'user';
+			// messages
+			Expanded(
+				// scroll thropugh past messages
+				child: ListView.builder(
+				padding: const EdgeInsets.all(16),
+				itemCount: messages.length,
+				itemBuilder: (context, index) {
+					// get current message
+					final message = messages[index];
+					// check if message sent by user
+					final isUser = message['sender'] == 'user';
 
-                return Align(
-                  alignment:
-                      isUser ? Alignment.centerRight : Alignment.centerLeft,
+					return Align(
+					alignment:
+						isUser ? Alignment.centerRight : Alignment.centerLeft,
 
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(14),
+					child: Container(
+						margin: const EdgeInsets.only(bottom: 12),
+						padding: const EdgeInsets.all(14),
 
-                    decoration: BoxDecoration(
-                      color: isUser
-                          ? Colors.blue
-                          : Colors.grey.shade200,
+						decoration: BoxDecoration(
+						color: isUser
+							? Colors.blue
+							: Colors.grey.shade200,
 
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+						borderRadius: BorderRadius.circular(16),
+						),
 
-                    child: Text(
-                      message['message']!,
-                      style: TextStyle(
-                        color: isUser
-                            ? Colors.white
-                            : Colors.black,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+						child: Text(
+						message['message']!,
+						style: TextStyle(
+							color: isUser
+								? Colors.white
+								: Colors.black,
+						),
+						),
+					),
+					);
+				},
+				),
+			),
 
           // Message input
-          Padding(
-            padding: const EdgeInsets.all(12),
+			Padding(
+				padding: const EdgeInsets.all(12),
 
-            child: Row(
-              children: [
+				child: Row(
+				children: [
 
-                Expanded(
-                  child: TextField(
-                    controller: messageController,
+					Expanded(
+					child: TextField(
+						controller: messageController,
 
-                    decoration: InputDecoration(
-                      hintText: 'Ask something...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                    ),
+						decoration: InputDecoration(
+						hintText: 'Ask something...',
+						border: OutlineInputBorder(
+							borderRadius: BorderRadius.circular(25),
+						),
+						),
 
-                    onSubmitted: (_) => sendMessage(),
-                  ),
-                ),
+						onSubmitted: (_) => sendMessage(),
+					),
+					),
 
-                const SizedBox(width: 8),
+					const SizedBox(width: 8),
 
-                IconButton(
-                  onPressed: sendMessage,
-                  icon: const Icon(Icons.send),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+					IconButton(
+					onPressed: sendMessage,
+					icon: const Icon(Icons.send),
+					),
+				],
+				),
+			),
+			],
+		),
+		);
+	}
 }
