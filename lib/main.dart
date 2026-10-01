@@ -1,12 +1,41 @@
 // Imports Flutter's Material Design widgets.
 // Scaffold, AppBar, TextField, buttons, etc.
 import 'package:flutter/material.dart';
+import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 
-void main() {
+import 'package:flutter_gemma/flutter_gemma.dart';
+import 'package:flutter_gemma_litertlm/flutter_gemma_litertlm.dart';
+
+import 'providers/local_llm_provider.dart';
+
+Future<void> main() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    // initalise Flutter Gemma
+    const huggingFaceToken = String.fromEnvironment('HUGGINGFACE_TOKEN');
+
+    await FlutterGemma.initialize(
+        huggingFaceToken: huggingFaceToken.isEmpty ? null : huggingFaceToken,
+        inferenceEngines: [
+            LiteRtLmEngine(),
+        ],
+    );
 	
 	// runApp() tells Flutter which widget should be the root
-  	// (starting point)
-  	runApp(const MyApp());
+    runApp(const MyApp());
+}
+
+Future<void> installModel() async {
+  // Install the Gemma model from Hugging Face.
+    await FlutterGemma.installModel(
+        modelType: ModelType.gemmaIt,
+        fileType: ModelFileType.litertlm,
+    )
+        .fromHuggingFace(
+            'litert-community/Gemma3-1B-IT',
+            file: 'gemma3-1b-it-int4.litertlm',
+        )
+        .install();
 }
 
 // MyApp is the main/root widget of our application.
@@ -47,132 +76,33 @@ class ChatPage extends StatefulWidget {
 	// constructor for chatpage
   	const ChatPage({super.key});
 
-	// creates obj that stores changing state of screen
-  	@override
-  	State<ChatPage> createState() => _ChatPageState();
+    @override
+    State<ChatPage> createState() => _ChatPageState();
 }
 
-// private class; everything that can change wihtin ChatPage 
 class _ChatPageState extends State<ChatPage> {
+    // create LLM + keep alive while page open
+    final LocalLlmProvider provider = LocalLlmProvider();
 
-	// cont5rol + read what is in textbox
-  	final TextEditingController messageController = TextEditingController();
+    @override
+    Widget build(BuildContext context) {
+        return Scaffold(appBar: AppBar(
+            title: const Text('LLM App! By Sadie'),
 
-	// stores all chat messages w/ a map of sender and message
- 	final List<Map<String, String>> messages = [];
+            actions: [
+                IconButton(onPressed: downloadModel, icon: const Icon(Icons.download)),
+            ]
+        ),
+      // defined in provider/local_llm provider.dart
+        body: LlmChatView(provider: provider
+        )
+        );
+    }
 
-	// user presses button -> this function
-  	void sendMessage() {
+    Future<void> downloadModel() async {
+        // install Gemma model
+        await installModel();
 
-		// get text currently inside textbox 
-    	final text = messageController.text.trim();
-
-    	if (text.isEmpty) return;
-
-		// tells flutter something has changed -- rebuild UI
-		setState(() {
-			messages.add({
-				'sender': 'user',
-				'message': text,
-			});
-
-			messages.add({
-				'sender': 'ai',
-				'message': 'This is where our local LLM will respond...',
-			});
-		});
-
-		// empty after send
-    	messageController.clear();
-  	}
-	
-	// builds the visual interface for ChatPage
-  	@override
-  	Widget build(BuildContext context) {
-		// basic Flutter screen structure
-    	return Scaffold(
-      		appBar: AppBar(
-        	title: const Text('LLM App - Flutter Tutorial'),
-      	),
-
-      	body: Column(
-        	children: [
-
-			// messages
-			Expanded(
-				// scroll thropugh past messages
-				child: ListView.builder(
-				padding: const EdgeInsets.all(16),
-				itemCount: messages.length,
-				itemBuilder: (context, index) {
-					// get current message
-					final message = messages[index];
-					// check if message sent by user
-					final isUser = message['sender'] == 'user';
-
-					return Align(
-					alignment:
-						isUser ? Alignment.centerRight : Alignment.centerLeft,
-
-					child: Container(
-						margin: const EdgeInsets.only(bottom: 12),
-						padding: const EdgeInsets.all(14),
-
-						decoration: BoxDecoration(
-						color: isUser
-							? Colors.blue
-							: Colors.grey.shade200,
-
-						borderRadius: BorderRadius.circular(16),
-						),
-
-						child: Text(
-						message['message']!,
-						style: TextStyle(
-							color: isUser
-								? Colors.white
-								: Colors.black,
-						),
-						),
-					),
-					);
-				},
-				),
-			),
-
-          // Message input
-			Padding(
-				padding: const EdgeInsets.all(12),
-
-				child: Row(
-				children: [
-
-					Expanded(
-					child: TextField(
-						controller: messageController,
-
-						decoration: InputDecoration(
-						hintText: 'Ask something...',
-						border: OutlineInputBorder(
-							borderRadius: BorderRadius.circular(25),
-						),
-						),
-
-						onSubmitted: (_) => sendMessage(),
-					),
-					),
-
-					const SizedBox(width: 8),
-
-					IconButton(
-					onPressed: sendMessage,
-					icon: const Icon(Icons.send),
-					),
-				],
-				),
-			),
-			],
-		),
-		);
-	}
+        setState(() {});
+    }
 }
